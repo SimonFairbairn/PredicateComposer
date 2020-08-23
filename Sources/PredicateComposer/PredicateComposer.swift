@@ -44,11 +44,11 @@ public struct PredicateStruct {
 		case .manyToManySearch:
 			// If the arguments aren't an array, then the query is differnt
 			guard let args = self.arguments as? [Any] else {
-				return [("ANY tags == %@", self.arguments)]
+				return [("ANY \(attribute) == %@", self.arguments)]
 			}
 			switch self.searchType {
 			case .or:
-				return [("ANY tags IN %@", self.arguments)]
+				return [("ANY \(attribute) IN %@", self.arguments)]
 			case .and:
 				switch args.count {
 				case 1:
