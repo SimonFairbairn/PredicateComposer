@@ -42,13 +42,14 @@ public struct PredicateStruct {
 		case .inArray:
 			return [("\(attribute) IN %@", self.arguments)]
 		case .manyToManySearch:
+			// If the arguments aren't an array, then the query is differnt
+			guard let args = self.arguments as? [Any] else {
+				return [("ANY tags == %@", self.arguments)]
+			}
 			switch self.searchType {
 			case .or:
-				return [("SUBQUERY(\(attribute), $att, $att IN %@).@count != 0", self.arguments)]
+				return [("ANY tags IN %@", self.arguments)]
 			case .and:
-				guard let args = self.arguments as? [Any] else {
-					return nil
-				}
 				switch args.count {
 				case 1:
 					return [("\(attribute).@count == 1 AND SUBQUERY(\(attribute), $tag, $tag == %@).@count == 1", self.arguments)]
@@ -80,15 +81,13 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 
 		var currentSearchType : SearchType = .and
 		var finalPredicateString = ""
+		var predicateArray : [String] = []
 		if !composition.isEmpty {
-			finalPredicateString = "("
 			for comp in composition {
 				if comp.searchType != currentSearchType {
-					
-					// This is the first time through, so no need to join
-					if finalPredicateString != "(" {
+					if !finalPredicateString.isEmpty {
 						finalPredicateString = predicateString.joined(separator: " \(currentSearchType.rawValue.uppercased()) ")
-						finalPredicateString += ") AND ("
+						predicateArray.append(finalPredicateString)
 					}
 					predicateString.removeAll()
 					currentSearchType = comp.searchType
@@ -107,8 +106,10 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 				}
 			}
 			finalPredicateString += predicateString.joined(separator: " \(currentSearchType.rawValue.uppercased()) ")
-			finalPredicateString += ")"
+			predicateArray.append(finalPredicateString)
 		}
+		
+		let validPredicates = predicateArray.filter({ !$0.isEmpty }).map({ "(\($0))"  }).joined(separator: " AND ")
 		
 		
 		if !finalPredicateString.isEmpty {
