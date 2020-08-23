@@ -8,7 +8,7 @@ Compose and reuse predicates and fetch requests in a type-safe way.
 
 		enum EntityComposer : PredicateComposing {
 
-			func requirements() -> (predicates:[PredicateStruct], combination: SearchType) {
+			func requirements() -> (predicates:[PredicateStruct], combination: SearchType)? {
 				return ([], .and)
 			}
 		}
@@ -18,7 +18,7 @@ Compose and reuse predicates and fetch requests in a type-safe way.
 		enum EntityComposer : PredicateComposing {
 			case searchString(String)
 
-			func requirements() -> (predicates:[PredicateStruct], combination: SearchType) {
+			func requirements() -> (predicates:[PredicateStruct], combination: SearchType)? {
 				return ([], .and)
 			}
 		}
@@ -28,7 +28,7 @@ Compose and reuse predicates and fetch requests in a type-safe way.
 		enum EntityComposer : PredicateComposing {
 			case searchString(String)
 
-			func requirements() -> (predicates:[PredicateStruct], combination: SearchType) {
+			func requirements() -> (predicates:[PredicateStruct], combination: SearchType)? {
 				switch self {
 				case .searchString(let search):
 					return ( predicates: [PredicateStruct(attribute: "text", predicateType: .containsCaseInsentive, arguments: search)], combination: .and)
@@ -76,10 +76,13 @@ If we have two entities (`Note` and `Tag`), with a to-many relationship between 
 		case tags([Tag], SearchType)
 		case alternativeSearch([String])
 
-		func requirements() -> (predicates:[PredicateStruct], combination: SearchType) {
+		func requirements() -> (predicates:[PredicateStruct], combination: SearchType)? {
 			switch self {
 			case .searchString(let search):
 				// 1.
+				if search.isEmpty {
+					return nil
+				}
 				return (predicates: [PredicateStruct(attribute: "text", predicateType: .containsCaseInsentive, arguments: search)], combination: .and)
 			case .exactMatch(let example):
 				// 2.
@@ -99,3 +102,7 @@ If we have two entities (`Note` and `Tag`), with a to-many relationship between 
 		}
 	}
 
+1. Case-insensitive search on the `text` attribute of the `Note` entity, but only if the search string is not empty.
+2. Exact match of the given `Note` object.
+3. All notes that appear in the passed `Note` array.
+4. If the passed `searchType` is `.and`, then the results will be any notes that are tagged with every tag in the passed `Tag` array. If the `searchType` is `.or`, then the results will be any notes that feature at least one of the tags in the passed `Tag` array (this uses a subquery as it is many-to-many operation).

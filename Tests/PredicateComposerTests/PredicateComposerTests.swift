@@ -19,7 +19,7 @@ enum NoteComposer : PredicateComposing {
 			return (predicates:[PredicateStruct(attribute: "self", predicateType: .inArray, arguments: notes)], combination: .and)
 		case .tags(let tags, let searchType):
 			return (predicates:[
-						PredicateStruct(attribute: "tags", predicateType: .subquery, arguments: tags, searchType: searchType)
+						PredicateStruct(attribute: "tags", predicateType: .manyToManySearch, arguments: tags, searchType: searchType)
 			], combination: .and)
 		case .alternativeSearch( let strings):
 			return (predicates: strings.map({ PredicateStruct(attribute: "text", predicateType: .containsCaseInsentive, arguments: $0) }), combination: .or)
