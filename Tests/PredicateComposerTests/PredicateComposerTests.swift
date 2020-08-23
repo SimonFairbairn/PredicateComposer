@@ -6,6 +6,7 @@ enum NoteComposer : PredicateComposing {
 	case searchString(String)
 	case exactMatch(Note)
 	case allMatching([Note])
+	case singleTag(Tag)
 	case tags([Tag],SearchType)
 	case alternativeSearch([String])
 	
@@ -17,6 +18,8 @@ enum NoteComposer : PredicateComposing {
 			return (predicates:[PredicateStruct(attribute: "self", predicateType: .equals, arguments: example)], combination: .and)
 		case .allMatching(let notes):
 			return (predicates:[PredicateStruct(attribute: "self", predicateType: .inArray, arguments: notes)], combination: .and)
+		case .singleTag(let tag):
+			return (predicates:[PredicateStruct(attribute: "tags", predicateType: .manyToManySearch, arguments: tag)], combination: .and)
 		case .tags(let tags, let searchType):
 			return (predicates:[
 						PredicateStruct(attribute: "tags", predicateType: .manyToManySearch, arguments: tags, searchType: searchType)
@@ -108,6 +111,8 @@ final class PredicateComposerTests: XCTestCase {
 		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
 		XCTAssertEqual( 3,results.count, "There should be exactly three results, \(results.count) found")
 		
+		try XCTSkipIf(results.count != 3)
+		
 		XCTAssertEqual(results[0], exampleObjects.notes[0], "The first result should equal the first object added to the database")
 		XCTAssertEqual(results[1], exampleObjects.notes[1], "The second result should equal the second object added to the database")
 		XCTAssertEqual(results[2], exampleObjects.notes[3], "The third result should equal the fourth object added to the database")
@@ -139,6 +144,20 @@ final class PredicateComposerTests: XCTestCase {
 		
 		XCTAssertEqual(results[0], exampleObjects.notes[0], "The first result should equal the first object added to the database")
 		
+	}
+	
+	func test_PredicateComposer_tag1_twoResult() throws {
+		var object = CoreDataPredicateComposer<Note>()
+		object.add(NoteComposer.singleTag(exampleObjects.tags[0]))
+		
+		let request = object.fetchRequest()
+		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
+		
+		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
+		XCTAssertEqual(2, results.count, "There should be exactly two results, \(results.count) found")
+		
+		XCTAssertEqual(results[0], exampleObjects.notes[0], "The first result should equal the first object added to the database")
+		XCTAssertEqual(results[1], exampleObjects.notes[1], "The second result should equal the second object added to the database")
 	}
 
 	func test_PredicateComposer_note1AndNote3_twoResults() throws {
