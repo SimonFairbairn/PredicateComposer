@@ -5,7 +5,7 @@ public enum PredicateType : String {
 	case containsCaseInsentive
 	case equals
 	case inArray
-	case subquery
+	case manyToManySearch
 }
 
 public enum SearchType : String {
@@ -41,7 +41,7 @@ public struct PredicateStruct {
 			return [("\(attribute) == %@", self.arguments)]
 		case .inArray:
 			return [("\(attribute) IN %@", self.arguments)]
-		case .subquery:
+		case .manyToManySearch:
 			switch self.searchType {
 			case .or:
 				return [("SUBQUERY(\(attribute), $att, $att IN %@).@count != 0", self.arguments)]
