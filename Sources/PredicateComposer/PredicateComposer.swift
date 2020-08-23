@@ -5,7 +5,7 @@ public enum PredicateType : String {
 	case containsCaseInsentive
 	case equals
 	case inArray
-	case subquery
+	case manyToManySearch
 }
 
 public enum SearchType : String {
@@ -14,7 +14,7 @@ public enum SearchType : String {
 }
 
 public protocol PredicateComposing {
-	func requirements() -> (predicates: [PredicateStruct], combination: SearchType)
+	func requirements() -> (predicates: [PredicateStruct], combination: SearchType)?
 }
 
 
@@ -41,7 +41,7 @@ public struct PredicateStruct {
 			return [("\(attribute) == %@", self.arguments)]
 		case .inArray:
 			return [("\(attribute) IN %@", self.arguments)]
-		case .subquery:
+		case .manyToManySearch:
 			switch self.searchType {
 			case .or:
 				return [("SUBQUERY(\(attribute), $att, $att IN %@).@count != 0", self.arguments)]
@@ -74,11 +74,10 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 	
 	private var composition : [PredicateComposition] = []
 	
-	public var predicate : NSPredicate {
+	public var predicate : NSPredicate? {
 		var predicateString : [String] = []
 		var argumentArray : [Any] = []
 
-		
 		var currentSearchType : SearchType = .and
 		var finalPredicateString = ""
 		if !composition.isEmpty {
@@ -115,23 +114,32 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 		if !finalPredicateString.isEmpty {
 			return NSPredicate(format: finalPredicateString, argumentArray: argumentArray)
 		} else {
-			return NSPredicate()
+			return nil
 		}
 	}
 	
 	
 	public init( requirements : [PredicateComposing] = []) {
 		
+		guard !requirements.isEmpty else {
+			return
+		}
 		var current = PredicateComposition(searchType: .and, predicates: [])
 		
 		for req in requirements {
-			if req.requirements().combination != current.searchType {
-				self.composition.append(current)
-				current = PredicateComposition(searchType: req.requirements().combination, predicates: [])
+			guard let validReq = req.requirements() else {
+				continue
 			}
-			current.predicates.append(contentsOf: req.requirements().predicates)
+			
+			if validReq.combination != current.searchType {
+				self.composition.append(current)
+				current = PredicateComposition(searchType: validReq.combination, predicates: [])
+			}
+			current.predicates.append(contentsOf: validReq.predicates)
 		}
 		self.composition.append(current)
+		
+
 	}
 	
 	mutating public func remove( _ requirement : PredicateComposing ) {
@@ -155,7 +163,12 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 	}
 	
 	mutating public func add( _ requirement : PredicateComposing ) {
-		let comp = PredicateComposition(searchType: requirement.requirements().combination, predicates: requirement.requirements().predicates)
+		
+		guard let validReq = requirement.requirements() else {
+			return
+		}
+		
+		let comp = PredicateComposition(searchType: validReq.combination, predicates: validReq.predicates)
 		self.composition.append(comp)
 
 	}
