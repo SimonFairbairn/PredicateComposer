@@ -2,10 +2,11 @@ import CoreData
 
 public enum PredicateType : String {
 	case contains
-	case containsCaseInsentive
+	case containsCaseInsensitive
 	case equals
 	case inArray
 	case manyToManySearch
+	case beginsWithCaseInsensitive
 }
 
 public enum SearchType : String {
@@ -35,8 +36,10 @@ public struct PredicateStruct {
 		switch self.predicateType {
 		case .contains:
 			return (self.arguments == nil) ? nil : [("\(attribute) CONTAINS %@", self.arguments)]
-		case .containsCaseInsentive:
+		case .containsCaseInsensitive:
 			return [("\(attribute) CONTAINS[c] %@", self.arguments)]
+		case .beginsWithCaseInsensitive:
+			return [("\(attribute) BEGINSWITH[c] %@", self.arguments)]
 		case .equals:
 			return [("\(attribute) == %@", self.arguments)]
 		case .inArray:
