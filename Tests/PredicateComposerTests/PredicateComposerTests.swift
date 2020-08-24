@@ -196,7 +196,7 @@ final class PredicateComposerTests: XCTestCase {
 	}
 	
 	func test_PredicateComposer_beginsWith_() throws {
-		let predicate = CoreDataPredicateComposer<Note>(requirements: [NoteComposer.beginsWith("nothin")])
+		let predicate = CoreDataPredicateComposer<Note>(requirements: [NoteComposer.beginsWith("NOTHING")])
 		
 		let request = predicate.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
