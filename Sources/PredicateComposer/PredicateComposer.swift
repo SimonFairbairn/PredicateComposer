@@ -16,7 +16,12 @@ public enum SearchType : String {
 
 public struct PredicateComposer {
 	let predicates : [PredicateStruct]
-	var combinedWith : SearchType = .or
+	let combinedWith : SearchType
+	
+	public init( predicates : [PredicateStruct], combinedWith : SearchType = .or) {
+		self.predicates = predicates
+		self.combinedWith = combinedWith
+	}
 }
 
 public protocol PredicateComposing {
