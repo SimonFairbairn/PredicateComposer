@@ -93,7 +93,7 @@ If we have two entities (`Note` and `Tag`), with a to-many relationship between 
 			case .tags(let tags, let searchType):
 				// 4.
 				return (predicates:[
-	PredicateStruct(attribute: "tags", predicateType: .subquery, arguments: tags, searchType: searchType)
+	PredicateStruct(attribute: "tags", predicateType: .manyToManySearch, arguments: tags, searchType: searchType)
 	], combination: .and)
 			case .alternativeSearch( let strings):
 				// 5.
@@ -106,3 +106,9 @@ If we have two entities (`Note` and `Tag`), with a to-many relationship between 
 2. Exact match of the given `Note` object.
 3. All notes that appear in the passed `Note` array.
 4. If the passed `searchType` is `.and`, then the results will be any notes that are tagged with every tag in the passed `Tag` array. If the `searchType` is `.or`, then the results will be any notes that feature at least one of the tags in the passed `Tag` array (this uses a subquery as it is many-to-many operation).
+
+This fourth type can be a little confusing, as a many to many search also needs to know how it should match the items within the search (`and` if it should match notes that have *all* the included tags, or `or` if it should match the notes with *any* included tags). 
+
+However, the predicates can also be combined in the same way, so you can have a predicate that says: Match notes that have all of the included tags (an `and` search type on the many to many relationship) OR match notes where the text contains "foo".
+
+The general rule is that a `.manyToManySearch` should also specify its `SearchType` to make it clear how that inner search should be conducted 
