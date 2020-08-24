@@ -14,8 +14,13 @@ public enum SearchType : String {
 	case and
 }
 
+public struct PredicateComposer {
+	let predicates : [PredicateStruct]
+	var combinedWith : SearchType = .or
+}
+
 public protocol PredicateComposing {
-	func requirements() -> (predicates: [PredicateStruct], combination: SearchType)?
+	func requirements() -> PredicateComposer?
 }
 
 
@@ -25,7 +30,7 @@ public struct PredicateStruct {
 	let arguments : Any?
 	let searchType : SearchType
 	
-	public init( attribute : String, predicateType : PredicateType, arguments : Any? = nil, searchType : SearchType = .and) {
+	public init( attribute : String, predicateType : PredicateType, arguments : Any? = nil, searchType : SearchType = .or) {
 		self.attribute = attribute
 		self.predicateType = predicateType
 		self.arguments = arguments
@@ -59,7 +64,7 @@ public struct PredicateStruct {
 				default:
 					var outStrings : [(String, Any?)] = []
 					for arg in args {
-						outStrings.append(("SUBQUERY(\(attribute), $tag, $tag == %@).@count == 1", arg))
+						outStrings.append(("SUBQUERY(\(attribute), $att, $att == %@).@count == 1", arg))
 					}
 					return outStrings
 				}
@@ -107,7 +112,10 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 						}
 						innerPredicateStrings.append(string.0)
 					}
-					predicateString.append(innerPredicateStrings.joined(separator: " AND "))
+					if !innerPredicateStrings.isEmpty {
+						predicateString.append("(" + innerPredicateStrings.joined(separator: " AND ") + ")")
+					}
+					
 				}
 			}
 			finalPredicateString += predicateString.joined(separator: " \(currentSearchType.rawValue.uppercased()) ")
@@ -137,9 +145,9 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 				continue
 			}
 			
-			if validReq.combination != current.searchType {
+			if validReq.combinedWith != current.searchType {
 				self.composition.append(current)
-				current = PredicateComposition(searchType: validReq.combination, predicates: [])
+				current = PredicateComposition(searchType: validReq.combinedWith, predicates: [])
 			}
 			current.predicates.append(contentsOf: validReq.predicates)
 		}
@@ -174,7 +182,7 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 			return
 		}
 		
-		let comp = PredicateComposition(searchType: validReq.combination, predicates: validReq.predicates)
+		let comp = PredicateComposition(searchType: validReq.combinedWith, predicates: validReq.predicates)
 		self.composition.append(comp)
 
 	}
