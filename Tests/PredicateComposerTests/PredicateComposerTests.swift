@@ -99,6 +99,8 @@ final class PredicateComposerTests: XCTestCase {
 		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
 		XCTAssertEqual( 2,results.count, "There should be exactly two results, \(results.count) found")
 		
+		try XCTSkipIf(results.count != 2)
+		
 		XCTAssertEqual(results[0], exampleObjects.notes[1], "The first result should equal the second object added to the database")
 		XCTAssertEqual(results[1], exampleObjects.notes[2], "The second result should equal the third object added to the database")
 
@@ -145,6 +147,8 @@ final class PredicateComposerTests: XCTestCase {
 		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
 		XCTAssertEqual(1, results.count, "There should be exactly one result, \(results.count) found")
 		
+		try XCTSkipIf(results.count != 1)
+		
 		XCTAssertEqual(results[0], exampleObjects.notes[0], "The first result should equal the first object added to the database")
 		
 	}
@@ -158,6 +162,8 @@ final class PredicateComposerTests: XCTestCase {
 		
 		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
 		XCTAssertEqual(2, results.count, "There should be exactly two results, \(results.count) found")
+		
+		try XCTSkipIf(results.count != 2)
 		
 		XCTAssertEqual(results[0], exampleObjects.notes[0], "The first result should equal the first object added to the database")
 		XCTAssertEqual(results[1], exampleObjects.notes[1], "The second result should equal the second object added to the database")
