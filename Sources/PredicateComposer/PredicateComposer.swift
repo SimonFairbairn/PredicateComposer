@@ -100,12 +100,14 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 					guard let queries = req.constructQuery() else {
 						continue
 					}
+					var innerPredicateStrings : [String] = []
 					for string in queries  {
 						if let existentOptions = string.1 {
 							argumentArray.append(existentOptions)
 						}
-						predicateString.append(string.0)
+						innerPredicateStrings.append(string.0)
 					}
+					predicateString.append(innerPredicateStrings.joined(separator: " AND "))
 				}
 			}
 			finalPredicateString += predicateString.joined(separator: " \(currentSearchType.rawValue.uppercased()) ")
@@ -115,8 +117,8 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 		let validPredicates = predicateArray.filter({ !$0.isEmpty }).map({ "(\($0))"  }).joined(separator: " AND ")
 		
 		
-		if !finalPredicateString.isEmpty {
-			return NSPredicate(format: finalPredicateString, argumentArray: argumentArray)
+		if !validPredicates.isEmpty {
+			return NSPredicate(format: validPredicates, argumentArray: argumentArray)
 		} else {
 			return nil
 		}

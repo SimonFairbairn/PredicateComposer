@@ -8,6 +8,7 @@ enum NoteComposer : PredicateComposing {
 	case allMatching([Note])
 	case singleTag(Tag)
 	case tags([Tag],SearchType)
+	case tagsOrStringSearch([Tag], String, SearchType)
 	case alternativeSearch([String])
 	case beginsWith(String)
 	
@@ -25,6 +26,11 @@ enum NoteComposer : PredicateComposing {
 			return (predicates:[
 						PredicateStruct(attribute: "tags", predicateType: .manyToManySearch, arguments: tags, searchType: searchType)
 			], combination: .and)
+		case .tagsOrStringSearch(let tags, let searchString, let searchType):
+			return (predicates:[
+				PredicateStruct(attribute: "tags", predicateType: .manyToManySearch, arguments: tags, searchType: searchType),
+				PredicateStruct(attribute: "text", predicateType: .containsCaseInsensitive, arguments: searchString)
+			], combination: .or)
 		case .alternativeSearch( let strings):
 			return (predicates: strings.map({ PredicateStruct(attribute: "text", predicateType: .containsCaseInsensitive, arguments: $0) }), combination: .or)
 		case .beginsWith( let string ):
@@ -152,6 +158,23 @@ final class PredicateComposerTests: XCTestCase {
 		XCTAssertEqual(results[0], exampleObjects.notes[0], "The first result should equal the first object added to the database")
 	}
 	
+	func test_PredicateComposer_tag1AndTag2OrWithoutTags_twoResults() throws {
+		var object = CoreDataPredicateComposer<Note>()
+		object.add(NoteComposer.tagsOrStringSearch([exampleObjects.tags[0], exampleObjects.tags[1]], "without", .and))
+		
+		let request = object.fetchRequest()
+		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
+		
+		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
+		XCTAssertEqual(2, results.count, "There should be exactly two results, \(results.count) found")
+		
+		try XCTSkipIf(results.count != 2)
+		
+		XCTAssertEqual(results[0], exampleObjects.notes[0], "The first result should equal the first object added to the database")
+		let text = try XCTUnwrap(results[1].text)
+		XCTAssert(text.contains("without"), "The second result should equal the third object added to the database: \(text)")
+	}
+	
 	func test_PredicateComposer_tag2_oneResult() throws {
 		var object = CoreDataPredicateComposer<Note>()
 		object.add(NoteComposer.tags([exampleObjects.tags[3]], .and))
@@ -165,7 +188,7 @@ final class PredicateComposerTests: XCTestCase {
 		try XCTSkipIf(results.count != 1)
 		
 		XCTAssertEqual(results[0], exampleObjects.notes[3], "The first result should equal the first object added to the database")
-		
+
 	}
 	
 	
