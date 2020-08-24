@@ -55,7 +55,7 @@ public struct PredicateStruct {
 			case .and:
 				switch args.count {
 				case 1:
-					return [("\(attribute).@count == 1 AND SUBQUERY(\(attribute), $tag, $tag == %@).@count == 1", self.arguments)]
+					return [("ANY \(attribute) IN %@", self.arguments)]
 				default:
 					var outStrings : [(String, Any?)] = []
 					for arg in args {

@@ -150,8 +150,24 @@ final class PredicateComposerTests: XCTestCase {
 		try XCTSkipIf(results.count != 1)
 		
 		XCTAssertEqual(results[0], exampleObjects.notes[0], "The first result should equal the first object added to the database")
+	}
+	
+	func test_PredicateComposer_tag2_oneResult() throws {
+		var object = CoreDataPredicateComposer<Note>()
+		object.add(NoteComposer.tags([exampleObjects.tags[3]], .and))
+		
+		let request = object.fetchRequest()
+		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
+		
+		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
+		XCTAssertEqual(1, results.count, "There should be exactly one result, \(results.count) found")
+		
+		try XCTSkipIf(results.count != 1)
+		
+		XCTAssertEqual(results[0], exampleObjects.notes[3], "The first result should equal the first object added to the database")
 		
 	}
+	
 	
 	func test_PredicateComposer_tag1_twoResult() throws {
 		var object = CoreDataPredicateComposer<Note>()
