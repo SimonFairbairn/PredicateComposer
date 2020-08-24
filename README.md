@@ -112,3 +112,5 @@ This fourth type can be a little confusing, as a many to many search also needs 
 However, the predicates can also be combined in the same way, so you can have a predicate that says: Match notes that have all of the included tags (an `and` search type on the many to many relationship) OR match notes where the text contains "foo".
 
 The general rule is that a `.manyToManySearch` should also specify its `SearchType` to make it clear how that inner search should be conducted 
+
+5. Searches for notes where the text contains any of the strings in the passed array.
