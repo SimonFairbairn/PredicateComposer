@@ -6,6 +6,7 @@ public enum PredicateType : String {
 	case equals
 	case inArray
 	case manyToManySearch
+	case beginsWithCaseInsensitive
 }
 
 public enum SearchType : String {
@@ -37,6 +38,8 @@ public struct PredicateStruct {
 			return (self.arguments == nil) ? nil : [("\(attribute) CONTAINS %@", self.arguments)]
 		case .containsCaseInsentive:
 			return [("\(attribute) CONTAINS[c] %@", self.arguments)]
+		case .beginsWithCaseInsensitive:
+			return [("\(attribute) BEGINSWITH[c] %@", self.arguments)]
 		case .equals:
 			return [("\(attribute) == %@", self.arguments)]
 		case .inArray:
