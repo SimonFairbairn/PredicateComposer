@@ -9,11 +9,12 @@ enum NoteComposer : PredicateComposing {
 	case singleTag(Tag)
 	case tags([Tag],SearchType)
 	case alternativeSearch([String])
+	case beginsWith(String)
 	
 	func requirements() -> (predicates:[PredicateStruct], combination: SearchType)? {
 		switch self {
 		case .searchString(let search):
-			return (predicates: [PredicateStruct(attribute: "text", predicateType: .containsCaseInsentive, arguments: search)], combination: .and)
+			return (predicates: [PredicateStruct(attribute: "text", predicateType: .containsCaseInsensitive, arguments: search)], combination: .and)
 		case .exactMatch(let example):
 			return (predicates:[PredicateStruct(attribute: "self", predicateType: .equals, arguments: example)], combination: .and)
 		case .allMatching(let notes):
@@ -25,7 +26,9 @@ enum NoteComposer : PredicateComposing {
 						PredicateStruct(attribute: "tags", predicateType: .manyToManySearch, arguments: tags, searchType: searchType)
 			], combination: .and)
 		case .alternativeSearch( let strings):
-			return (predicates: strings.map({ PredicateStruct(attribute: "text", predicateType: .containsCaseInsentive, arguments: $0) }), combination: .or)
+			return (predicates: strings.map({ PredicateStruct(attribute: "text", predicateType: .containsCaseInsensitive, arguments: $0) }), combination: .or)
+		case .beginsWith( let string ):
+			return (predicates: [PredicateStruct(attribute: "text", predicateType: .beginsWithCaseInsensitive, arguments: string)], combination : .and)
 		}
 	}
 }
@@ -169,6 +172,8 @@ final class PredicateComposerTests: XCTestCase {
 		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
 		XCTAssertEqual(2, results.count, "There should be exactly two results, \(results.count) found")
 		
+		try XCTSkipIf(results.count != 2)
+		
 		XCTAssertEqual(results[0], exampleObjects.notes[0], "The first result should equal the first object added to the database")
 		XCTAssertEqual(results[1], exampleObjects.notes[1], "The second result should equal the second object added to the database")
 	}
@@ -182,6 +187,21 @@ final class PredicateComposerTests: XCTestCase {
 		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
 		XCTAssertEqual(exampleObjects.notes.count, results.count, "There should be exactly the same number of results as notes, \(results.count) found")
 
+	}
+	
+	func test_PredicateComposer_beginsWith_() throws {
+		let predicate = CoreDataPredicateComposer<Note>(requirements: [NoteComposer.beginsWith("nothin")])
+		
+		let request = predicate.fetchRequest()
+		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
+		
+		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
+		XCTAssertEqual(1, results.count, "There should be exactly one note, \(results.count) found")
+		
+		try XCTSkipIf(results.count != 1)
+		
+		XCTAssertEqual(results[0].text, exampleObjects.notes[1].text, "The first result's text should equal the second object added to the database's text ('nothingburger')")
+		
 	}
 	
 }
