@@ -163,8 +163,11 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 			current.predicates.append(contentsOf: validReq.predicates)
 		}
 		self.composition.append(current)
-		
-
+	}
+	
+	mutating public func addPredicate( for attribute: String, type : PredicateType, arguments : Any? = nil, searchType : SearchType = .or ) {
+		let newPred = PredicateStruct(attribute: attribute, predicateType: type, arguments: arguments, searchType: searchType)
+		self.composition.append(PredicateComposition(searchType: .or, predicates: [newPred]))
 	}
 	
 	mutating public func remove( _ requirement : PredicateComposing ) {

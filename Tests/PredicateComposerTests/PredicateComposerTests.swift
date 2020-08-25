@@ -2,6 +2,7 @@ import XCTest
 import CoreData
 @testable import PredicateComposer
 
+
 enum NoteComposer : PredicateComposing {
 	case searchString(String)
 	case exactMatch(Note)
@@ -14,10 +15,15 @@ enum NoteComposer : PredicateComposing {
 	case allCompleted
 	case allNotCompleted
 	
+	private func searchPredicate(_ string : String ) -> PredicateStruct {
+		PredicateStruct(attribute: "text", predicateType: .containsCaseInsensitive, arguments: string)
+	}
+	
+	
 	func requirements() -> PredicateComposer? {
 		switch self {
 		case .searchString(let search):
-			return PredicateComposer(predicates: [PredicateStruct(attribute: "text", predicateType: .containsCaseInsensitive, arguments: search)])
+			return PredicateComposer(predicates: [searchPredicate(search)]) 
 		case .exactMatch(let example):
 			return PredicateComposer(predicates:[PredicateStruct(attribute: "self", predicateType: .equals, arguments: example)])
 		case .allMatching(let notes):
@@ -31,7 +37,7 @@ enum NoteComposer : PredicateComposing {
 		case .tagsOrStringSearch(let tags, let searchString, let searchType):
 			return PredicateComposer(predicates:[
 				PredicateStruct(attribute: "tags", predicateType: .manyToManySearch, arguments: tags, searchType: searchType),
-				PredicateStruct(attribute: "text", predicateType: .containsCaseInsensitive, arguments: searchString)
+				searchPredicate(searchString)
 			], combinedWith: .or)
 		case .alternativeSearch( let strings):
 			return PredicateComposer(predicates:
