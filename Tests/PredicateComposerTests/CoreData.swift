@@ -57,9 +57,10 @@ final class CoreDataContainer {
 		self.saveContext()
 	}
 	
-	private func addExample( with string : String ) -> Note {
+	private func addExample( with string : String, isCompleted : Bool = false ) -> Note {
 		let newExample = Note(context: self.persistentContainer.viewContext)
 		newExample.text = string
+		newExample.isCompleted = isCompleted
 		newExample.added = Date()
 		self.saveContext()
 		return newExample
@@ -74,7 +75,7 @@ final class CoreDataContainer {
 	
 	func addExamples() -> (notes:[Note], tags: [Tag]) {
 		let strings = ["A test string to search on", "nothingburger", "without tags", "Tag 2" ]
-		let examples = strings.map({ self.addExample(with: $0) })
+		let examples = strings.map({ self.addExample(with: $0, isCompleted: $0.contains("test string")) })
 		
 		let tags = ["Tag 1", "Tag 2", "Lonely Tag", "Tag 3"]
 		let tagMOs = tags.map({ self.addTag(with: $0 )})

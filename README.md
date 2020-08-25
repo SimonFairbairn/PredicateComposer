@@ -1,6 +1,6 @@
 # PredicateComposer
 
-Compose and reuse predicates and fetch requests in a type-safe way.
+Compose and reuse predicates and fetch requests in a convenient and type-safe way.
 
 ## Usage
 
@@ -8,8 +8,8 @@ Compose and reuse predicates and fetch requests in a type-safe way.
 
 		enum EntityComposer : PredicateComposing {
 
-			func requirements() -> (predicates:[PredicateStruct], combination: SearchType)? {
-				return ([], .and)
+			func requirements() -> PredicateComposer? {
+				return nil
 			}
 		}
 		
@@ -18,8 +18,8 @@ Compose and reuse predicates and fetch requests in a type-safe way.
 		enum EntityComposer : PredicateComposing {
 			case searchString(String)
 
-			func requirements() -> (predicates:[PredicateStruct], combination: SearchType)? {
-				return ([], .and)
+			func requirements() -> PredicateComposer? {
+				return nil
 			}
 		}
 		
@@ -28,27 +28,45 @@ Compose and reuse predicates and fetch requests in a type-safe way.
 		enum EntityComposer : PredicateComposing {
 			case searchString(String)
 
-			func requirements() -> (predicates:[PredicateStruct], combination: SearchType)? {
+			func requirements() -> PredicateComposer? {
 				switch self {
 				case .searchString(let search):
-					return ( predicates: [PredicateStruct(attribute: "text", predicateType: .containsCaseInsentive, arguments: search)], combination: .and)
+					return PredicateComposer( predicates: [ PredicateStruct(attribute: "text", predicateType: .containsCaseInsentive, arguments: search) ] )
 				}
 			}
 		}
 
 4. Create a new `CoreDataPredicateComposer`, specify it to your Core Data entity, and pass in the requirement: 
 
-		let search = CoreDataPredicateComposer<Entity>(EntityComposer.searchString(String))
+		let search = CoreDataPredicateComposer<Entity>( EntityComposer.searchString(String) )
 		
 5. Get and execute the fetch request:
 
-		let request = search.fetchRequest()
-		let results = try context.execute(request)
+		let results = try context.execute(search.fetchRequest())
 		
 6. Alternatively, get just the predicate and use it anywhere you need a Core Data predicate (e.g. `@FetchRequest` in SwiftUI):
 
 		@FetchRequest(entity: Entity.entity(), sortDescriptors: [], predicate:CoreDataPredicateComposer<Entity>(EntityComposer.searchString(String)).predicate)
 
+## Advanced Usage
+
+If your entities share similar attributes (e.g. an `id` or a `name` attribute), then predicates can easily be reused:
+
+
+	enum UniversalPredicateComposer : PredicateComposing {
+		case entityNamed( String )
+		
+		func requirements() -> PredicateComposer? {
+			switch self {
+			case .entityNamed(let name):
+				return PredicateComposer( predicates: [ PredicateStruct(attribute: "name", predicateType: .beginsWithCaseInsensitive, arguments: search) ] )
+			}
+		}
+	}
+	
+	let notesFetchRequest = CoreDataPredicateComposer<Note>( UniversalPredicateComposer.entityNamed( "Note name to search for" ) ).fetchRequest()
+	let tagsFetchRequest = CoreDataPredicateComposer<Tag>( UniversalPredicateComposer.entityNamed( "Tag name to search for" ) ).fetchRequest()
+	
 
 ## PredicateStruct
 
