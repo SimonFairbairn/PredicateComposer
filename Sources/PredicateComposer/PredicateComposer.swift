@@ -7,6 +7,8 @@ public enum PredicateType : String {
 	case inArray
 	case manyToManySearch
 	case beginsWithCaseInsensitive
+	case isTrue
+	case isFalse
 }
 
 public enum SearchType : String {
@@ -44,6 +46,10 @@ public struct PredicateStruct {
 	
 	internal func constructQuery() -> [(String, Any?)]? {
 		switch self.predicateType {
+		case .isTrue:
+			return [("\(attribute) == true", nil)]
+		case .isFalse:
+			return [("\(attribute) == false", nil)]
 		case .contains:
 			return (self.arguments == nil) ? nil : [("\(attribute) CONTAINS %@", self.arguments)]
 		case .containsCaseInsensitive:

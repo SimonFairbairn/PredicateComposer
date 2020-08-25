@@ -11,6 +11,8 @@ enum NoteComposer : PredicateComposing {
 	case tagsOrStringSearch([Tag], String, SearchType)
 	case alternativeSearch([String])
 	case beginsWith(String)
+	case allCompleted
+	case allNotCompleted
 	
 	func requirements() -> PredicateComposer? {
 		switch self {
@@ -37,6 +39,10 @@ enum NoteComposer : PredicateComposing {
 										   combinedWith: .or)
 		case .beginsWith( let string ):
 			return PredicateComposer(predicates: [PredicateStruct(attribute: "text", predicateType: .beginsWithCaseInsensitive, arguments: string)])
+		case .allCompleted:
+			return PredicateComposer(predicates: [PredicateStruct(attribute: "isCompleted", predicateType: .isTrue)])
+		case .allNotCompleted:
+			return PredicateComposer(predicates: [PredicateStruct(attribute: "isCompleted", predicateType: .isFalse)])
 		}
 	}
 }
@@ -251,4 +257,35 @@ final class PredicateComposerTests: XCTestCase {
 		
 	}
 	
+	func test_PredicateComposer_isTrue_oneResult() throws {
+		let predicate = CoreDataPredicateComposer<Note>(requirements: [NoteComposer.allCompleted])
+		
+		let request = predicate.fetchRequest()
+		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
+		
+		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
+		XCTAssertEqual(1, results.count, "There should be exactly one note, \(results.count) found")
+		
+		try XCTSkipIf(results.count != 1)
+		
+		XCTAssertTrue(results[0].isCompleted)
+		
+	}
+	
+	func test_PredicateComposer_isFalse_threeResults() throws {
+		let predicate = CoreDataPredicateComposer<Note>(requirements: [NoteComposer.allNotCompleted])
+		
+		let request = predicate.fetchRequest()
+		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
+		
+		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
+		XCTAssertEqual(3, results.count, "There should be three note, \(results.count) found")
+		
+		try XCTSkipIf(results.count != 3)
+		
+		XCTAssertFalse(results[0].isCompleted)
+		XCTAssertFalse(results[1].isCompleted)
+		XCTAssertFalse(results[2].isCompleted)
+		
+	}
 }
