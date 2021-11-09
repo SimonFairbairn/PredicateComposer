@@ -27,7 +27,6 @@ let package = Package(
         .target(
             name: "PredicateComposer",
             dependencies: [],
-			exclude: ["Example"]),
         .testTarget(
             name: "PredicateComposerTests",
             dependencies: ["PredicateComposer"]),
