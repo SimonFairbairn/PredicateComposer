@@ -15,40 +15,56 @@ enum NoteComposer : PredicateComposing {
 	case allCompleted
 	case allNotCompleted
 	
-	private func searchPredicate(_ string : String ) -> PredicateStruct {
-		PredicateStruct(attribute: "text", predicateType: .containsCaseInsensitive, arguments: string)
+	private func searchPredicate(_ string : String ) -> SearchFor {
+		SearchFor(.entitiesWithAttribute("text"), that: .containsCaseInsensitive(string))
 	}
-	
 	
 	func requirements() -> PredicateComposer? {
 		switch self {
 		case .searchString(let search):
 			return PredicateComposer(predicates: [searchPredicate(search)]) 
 		case .exactMatch(let example):
-			return PredicateComposer(predicates:[PredicateStruct(attribute: "self", predicateType: .equals, arguments: example)])
+			return PredicateComposer(predicates:[SearchFor(.entity, that: .equals(example))])
 		case .allMatching(let notes):
-			return PredicateComposer(predicates:[PredicateStruct(attribute: "self", predicateType: .inArray, arguments: notes)])
-		case .singleTag(let tag):
-			return PredicateComposer(predicates:[PredicateStruct(attribute: "tags", predicateType: .manyToManySearch, arguments: tag)])
+			return PredicateComposer(predicates:[SearchFor(.entity, that: .isInArray(notes))])
+		case .singleTag(let tags):
+			return PredicateComposer(predicates:[SearchFor(.entitiesWithAttribute("tags"), that: .haveAllOf(tags))])
 		case .tags(let tags, let searchType):
-			return PredicateComposer(predicates:[
-						PredicateStruct(attribute: "tags", predicateType: .manyToManySearch, arguments: tags, searchType: searchType)
-			])
+			switch searchType {
+			case .or:
+				return PredicateComposer(predicates:[
+					SearchFor(.entitiesWithAttribute("tags"), that: .haveAtLeastOneOf(tags))
+				])
+			case .and:
+				return PredicateComposer(predicates:[
+					SearchFor(.entitiesWithAttribute("tags"), that: .haveAllOf(tags))
+				])
+			}
+			
 		case .tagsOrStringSearch(let tags, let searchString, let searchType):
-			return PredicateComposer(predicates:[
-				PredicateStruct(attribute: "tags", predicateType: .manyToManySearch, arguments: tags, searchType: searchType),
-				searchPredicate(searchString)
-			], combinedWith: .or)
+			switch searchType {
+			case .or:
+				return PredicateComposer(predicates:[
+					SearchFor(.entitiesWithAttribute("tags"), that: .haveAtLeastOneOf(tags)),
+					searchPredicate(searchString)
+				], combinedWith: .or)
+			case .and:
+				return PredicateComposer(predicates:[
+					SearchFor(.entitiesWithAttribute("tags"), that: .haveAllOf(tags)),
+					searchPredicate(searchString)
+				], combinedWith: .or)
+			}
+			
 		case .alternativeSearch( let strings):
 			return PredicateComposer(predicates:
-											strings.map({ PredicateStruct(attribute: "text", predicateType: .containsCaseInsensitive, arguments: $0) }),
+										strings.map({ SearchFor(.entitiesWithAttribute("text"), that: .containsCaseInsensitive( $0 )) }),
 										   combinedWith: .or)
 		case .beginsWith( let string ):
-			return PredicateComposer(predicates: [PredicateStruct(attribute: "text", predicateType: .beginsWithCaseInsensitive, arguments: string)])
+			return PredicateComposer(predicates: [SearchFor(.entitiesWithAttribute("text") , that: .beginsWithCaseInsensitive(string))])
 		case .allCompleted:
-			return PredicateComposer(predicates: [PredicateStruct(attribute: "isCompleted", predicateType: .isTrue)])
+			return PredicateComposer(predicates: [SearchFor(.entitiesWithAttribute("isCompleted") , that: .isTrue)])
 		case .allNotCompleted:
-			return PredicateComposer(predicates: [PredicateStruct(attribute: "isCompleted", predicateType: .isFalse)])
+			return PredicateComposer(predicates: [SearchFor(.entitiesWithAttribute("isCompleted") , that: .isFalse)])
 		}
 	}
 }
@@ -142,6 +158,22 @@ final class PredicateComposerTests: XCTestCase {
 		XCTAssertEqual(results[1], exampleObjects.notes[1], "The second result should equal the second object added to the database")
 		XCTAssertEqual(results[2], exampleObjects.notes[3], "The third result should equal the fourth object added to the database")
 
+	}
+	
+	func test_PredicateComposer_noTag_zeroResults() throws {
+		var object = CoreDataPredicateComposer<Note>()
+		object.add(NoteComposer.tags([], .or))
+		
+		let request = object.fetchRequest()
+		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
+		
+		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
+		XCTAssertEqual( 1,results.count, "There should be exactly one results, \(results.count) found")
+		
+		try XCTSkipIf(results.count != 1)
+		
+		XCTAssertEqual(results[0], exampleObjects.notes[2], "The first result should equal the third object added to the database")
+		
 	}
 	
 	

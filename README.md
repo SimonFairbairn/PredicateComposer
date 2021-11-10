@@ -1,6 +1,8 @@
 # PredicateComposer
 
-Compose and reuse predicates and fetch requests in a convenient and type-safe way.
+Compose and reuse predicates and fetch requests in a convenient and type-safe way. No more will you have to look up those predicate patterns!
+
+
 
 ## Usage
 
@@ -31,12 +33,12 @@ Compose and reuse predicates and fetch requests in a convenient and type-safe wa
 			func requirements() -> PredicateComposer? {
 				switch self {
 				case .searchString(let search):
-					return PredicateComposer( predicates: [ PredicateStruct(attribute: "text", predicateType: .containsCaseInsentive, arguments: search) ] )
+					return PredicateComposer( predicates: [ PredicateStruct(attribute: "text", predicateType: .containsCaseInsentive(search)) ] )
 				}
 			}
 		}
 
-4. Create a new `CoreDataPredicateComposer`, specify it to your Core Data entity, and pass in the requirement: 
+4. Create a new `CoreDataPredicateComposer`, specify it to your Core Data entity, and pass in the an instance of your enumeration: 
 
 		let search = CoreDataPredicateComposer<Entity>( EntityComposer.searchString(String) )
 		
@@ -47,6 +49,8 @@ Compose and reuse predicates and fetch requests in a convenient and type-safe wa
 6. Alternatively, get just the predicate and use it anywhere you need a Core Data predicate (e.g. `@FetchRequest` in SwiftUI):
 
 		@FetchRequest(entity: Entity.entity(), sortDescriptors: [], predicate:CoreDataPredicateComposer<Entity>(EntityComposer.searchString(String)).predicate)
+		
+PredicateComposer will take care of all the formatting and positioning of the arguments for you.
 
 ## Advanced Usage
 

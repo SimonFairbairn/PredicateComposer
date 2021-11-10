@@ -1,14 +1,21 @@
 import CoreData
 
-public enum PredicateType : String {
-	case contains
-	case containsCaseInsensitive
-	case equals
-	case inArray
-	case manyToManySearch
-	case beginsWithCaseInsensitive
+public enum PredicateType {
+	case contains(String?)
+	case containsCaseInsensitive(String?)
+	case beginsWithCaseInsensitive(String?)
+	case equals(Any?)
+	case isInArray([Any])
+	case haveAtLeastOneOf( Any)
+	case haveAllOf( Any )
 	case isTrue
 	case isFalse
+}
+
+public enum Match {
+	case entity
+	case entityNamed(String)
+	case entitiesWithAttribute(String)
 }
 
 public enum SearchType : String {
@@ -17,10 +24,10 @@ public enum SearchType : String {
 }
 
 public struct PredicateComposer {
-	let predicates : [PredicateStruct]
+	let predicates : [SearchFor]
 	let combinedWith : SearchType
 	
-	public init( predicates : [PredicateStruct], combinedWith : SearchType = .or) {
+	public init( predicates : [SearchFor], combinedWith : SearchType = .or) {
 		self.predicates = predicates
 		self.combinedWith = combinedWith
 	}
@@ -31,17 +38,22 @@ public protocol PredicateComposing {
 }
 
 
-public struct PredicateStruct {
+public struct SearchFor {
 	let attribute : String
 	let predicateType : PredicateType
 	let arguments : Any?
-	let searchType : SearchType
 	
-	public init( attribute : String, predicateType : PredicateType, arguments : Any? = nil, searchType : SearchType = .or) {
-		self.attribute = attribute
+	public init( _ attribute : Match, that predicateType : PredicateType, arguments : Any? = nil) {
+		switch attribute {
+		case .entity:
+			self.attribute = "self"
+		case .entityNamed(let string):
+			self.attribute = string
+		case .entitiesWithAttribute(let string):
+			self.attribute = string
+		}
 		self.predicateType = predicateType
 		self.arguments = arguments
-		self.searchType = searchType
 	}
 	
 	internal func constructQuery() -> [(String, Any?)]? {
@@ -50,37 +62,44 @@ public struct PredicateStruct {
 			return [("\(attribute) == true", nil)]
 		case .isFalse:
 			return [("\(attribute) == false", nil)]
-		case .contains:
-			return (self.arguments == nil) ? nil : [("\(attribute) CONTAINS %@", self.arguments)]
-		case .containsCaseInsensitive:
-			return [("\(attribute) CONTAINS[c] %@", self.arguments)]
-		case .beginsWithCaseInsensitive:
-			return [("\(attribute) BEGINSWITH[c] %@", self.arguments)]
-		case .equals:
-			return [("\(attribute) == %@", self.arguments)]
-		case .inArray:
-			return [("\(attribute) IN %@", self.arguments)]
-		case .manyToManySearch:
+		case .contains(let argument):
+			return (argument == nil) ? nil : [("\(attribute) CONTAINS %@", argument)]
+		case .containsCaseInsensitive(let argument):
+			return (argument == nil) ? nil : [("\(attribute) CONTAINS[c] %@", argument)]
+		case .beginsWithCaseInsensitive(let argument):
+			return (argument == nil) ? nil : [("\(attribute) BEGINSWITH[c] %@", argument)]
+		case .equals(let argument):
+			return [("\(attribute) == %@", argument)]
+		case .isInArray(let array):
+			return [("\(attribute) IN %@", array)]
+		case .haveAtLeastOneOf( let argument):
 			// If the arguments aren't an array, then the query is differnt
-			guard let args = self.arguments as? [Any] else {
-				return [("ANY \(attribute) == %@", self.arguments)]
+			guard let args = argument as? [Any] else {
+				return [("ANY \(attribute) == %@", argument)]
 			}
-			switch self.searchType {
-			case .or:
-				return [("ANY \(attribute) IN %@", self.arguments)]
-			case .and:
-				switch args.count {
-				case 1:
-					return [("ANY \(attribute) IN %@", self.arguments)]
-				default:
-					var outStrings : [(String, Any?)] = []
-					for arg in args {
-						outStrings.append(("SUBQUERY(\(attribute), $att, $att == %@).@count == 1", arg))
-					}
-					return outStrings
-				}
+			switch args.count {
+			case 0:
+				return [("\(attribute).@count == 0", nil)]
+			default:
+				return [("ANY \(attribute) IN %@", args)]
 			}
 			
+		case .haveAllOf(let argument):
+			guard let args = argument as? [Any] else {
+				return [("ANY \(attribute) == %@", argument)]
+			}
+			switch args.count {
+			case 0:
+				return [("\(attribute).@count == 0", nil)]
+			case 1:
+				return [("ANY \(attribute) IN %@", args)]
+			default:
+				var outStrings : [(String, Any?)] = []
+				for arg in args {
+					outStrings.append(("SUBQUERY(\(attribute), $att, $att == %@).@count == 1", arg))
+				}
+				return outStrings
+			}
 		}
 	}
 }
@@ -89,7 +108,7 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 	
 	struct PredicateComposition {
 		let searchType : SearchType
-		var predicates : [PredicateStruct]
+		var predicates : [SearchFor]
 	}
 	
 	private var composition : [PredicateComposition] = []
@@ -135,7 +154,6 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 		
 		let validPredicates = predicateArray.filter({ !$0.isEmpty }).map({ "(\($0))"  }).joined(separator: " AND ")
 		
-		
 		if !validPredicates.isEmpty {
 			return NSPredicate(format: validPredicates, argumentArray: argumentArray)
 		} else {
@@ -165,8 +183,8 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 		self.composition.append(current)
 	}
 	
-	mutating public func addPredicate( for attribute: String, type : PredicateType, arguments : Any? = nil, searchType : SearchType = .or ) {
-		let newPred = PredicateStruct(attribute: attribute, predicateType: type, arguments: arguments, searchType: searchType)
+	mutating public func addPredicate( for attribute: Match, type : PredicateType, arguments : Any? = nil ) {
+		let newPred = SearchFor(attribute, that: type)
 		self.composition.append(PredicateComposition(searchType: .or, predicates: [newPred]))
 	}
 	
@@ -174,7 +192,7 @@ public struct CoreDataPredicateComposer<T : NSManagedObject> {
 //		self.remove(requirement.requirements())
 	}
 	
-	mutating private func remove( _ predicates : [PredicateStruct] ) {
+	mutating private func remove( _ predicates : [SearchFor] ) {
 //		for predicate in predicates {
 //			guard let finalString = predicate.constructQuery() else {
 //				continue

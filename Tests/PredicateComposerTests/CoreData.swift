@@ -11,7 +11,6 @@ import CoreData
 final class CoreDataContainer {
 	let persistentContainer: NSPersistentContainer
 	public init(testData : Bool = false, deleteExisting : Bool = false) {
-		print("Initialising")
 		self.persistentContainer = {
 			guard let url = Bundle.module.url(forResource: "Example", withExtension:"momd") else {
 				fatalError("Couldn't load bundle!")
