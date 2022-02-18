@@ -21,7 +21,7 @@ public enum Match {
 
 	case attribute(String)
 	case relationshipWithEntityNamed(String)
-	case entityRelationshipWithAttribute(NSManagedObject, String)
+	case entityRelationshipWithAttribute(String, String)
 }
 
 public enum SearchType: String {
@@ -71,10 +71,7 @@ public struct SearchFor {
 		case .relationshipWithEntityNamed(let entity):
 			self.attribute = entity
 		case .entityRelationshipWithAttribute(let obj, let attribute):
-			guard let name = obj.entity.name else {
-				fatalError("A NSManagedObject was passed to the SearchFor struct in Predicate Composer that does not have a valid Entity name")
-			}
-			self.attribute = "\(name).\(attribute)"
+			self.attribute = "\(obj).\(attribute)"
 		}
 		self.predicateType = predicateType
 		self.arguments = arguments
