@@ -73,15 +73,25 @@ final class CoreDataContainer {
 	}
 
 	func addExamples() -> (notes: [Note], tags: [Tag]) {
-		let strings = ["A test string to search on", "nothingburger", "without tags", "Tag 2" ]
+		let strings = [
+			"A test string to search on",
+			"nothingburger",
+			"without tags",
+			"Tag 2"
+		]
 		let examples = strings.map({ self.addExample(with: $0, isCompleted: $0.contains("test string")) })
 
-		let tags = ["Tag 1", "Tag 2", "Lonely Tag", "Tag 3"]
+		let tags = [
+			"Tag 1",
+			"Tag 2",
+			"Lonely Tag",
+			"Tag 3"
+		]
 		let tagMOs = tags.map({ self.addTag(with: $0 )})
 
 		examples[0].addToTags(NSSet(array: [tagMOs[0], tagMOs[1]] )) // Tag 1, Tag 2
 		examples[1].addToTags(tagMOs[0]) // Tag 1
-		examples[3].addToTags(NSSet(array: [tagMOs[1], tagMOs[3]] )) // Tag 2
+		examples[3].addToTags(NSSet(array: [tagMOs[1], tagMOs[3]] )) // Tag 2, Tag 3
 
 		return (notes: examples, tags: tagMOs)
 	}
