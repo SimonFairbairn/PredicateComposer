@@ -8,7 +8,7 @@ Compose and reuse predicates and fetch requests in a convenient and type-safe wa
 
 1. Set up a new enumeration for the entity you want to query on and conform to the `PredicateComposing` protocol:
 
-		enum EntityComposer : PredicateComposing {
+		enum EntityComposer: PredicateComposing {
 
 			func requirements() -> PredicateComposer? {
 				return nil
@@ -17,7 +17,7 @@ Compose and reuse predicates and fetch requests in a convenient and type-safe wa
 		
 2. Add a case for each type of predicate you want to create:
 
-		enum EntityComposer : PredicateComposing {
+		enum EntityComposer: PredicateComposing {
 			case searchString(String)
 
 			func requirements() -> PredicateComposer? {
@@ -27,7 +27,7 @@ Compose and reuse predicates and fetch requests in a convenient and type-safe wa
 		
 3. Fill in the `requirements()` method, returing an array of one or more `PredicateStruct` types together with an indicator of how you want to combine them (`and` or `or`):
 
-		enum EntityComposer : PredicateComposing {
+		enum EntityComposer: PredicateComposing {
 			case searchString(String)
 
 			func requirements() -> PredicateComposer? {
@@ -57,7 +57,7 @@ PredicateComposer will take care of all the formatting and positioning of the ar
 If your entities share similar attributes (e.g. an `id` or a `name` attribute), then predicates can easily be reused:
 
 
-	enum UniversalPredicateComposer : PredicateComposing {
+	enum UniversalPredicateComposer: PredicateComposing {
 		case entityNamed( String )
 		
 		func requirements() -> PredicateComposer? {
@@ -78,7 +78,7 @@ The `PredicateStruct` type is set up to limit the number of strings needed when 
 
 Available predicate types:
 
-		public enum PredicateType : String {
+		public enum PredicateType: String {
 			case contains
 			case containsCaseInsentive
 			case equals
@@ -91,7 +91,7 @@ Available predicate types:
 If we have two entities (`Note` and `Tag`), with a to-many relationship between them, we could create the following predicates on the `Note` entity:  
 
 
-	enum NoteComposer : PredicateComposing {
+	enum NoteComposer: PredicateComposing {
 		case searchString(String)
 		case exactMatch(Note)
 		case allMatching([Note])
