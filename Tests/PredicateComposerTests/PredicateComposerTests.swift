@@ -2,21 +2,7 @@ import XCTest
 import CoreData
 @testable import PredicateComposer
 
-final class PredicateComposerTests: XCTestCase {
-
-	static var model = CoreDataContainer()
-
-	var exampleObjects: ( notes: [Note], tags: [Tag] )!
-
-	override func setUp() {
-		self.exampleObjects = PredicateComposerTests.model.addExamples()
-		super.setUp()
-	}
-
-	override func tearDown() {
-		PredicateComposerTests.model.remove(exampleObjects)
-		super.tearDown()
-	}
+final class PredicateComposerTests: BaseTestCase {
 
     func test_PredicateComposer_stringSearchForTest_oneResult() throws {
 
@@ -64,7 +50,11 @@ final class PredicateComposerTests: XCTestCase {
 
 		// Then
 		XCTAssertEqual( 1, results.count, "There should be exactly one results, \(results.count) found")
-		XCTAssertEqual(results.first?.text, exampleObjectText, "The retured results should have the string of the searched for object. Instead it has \(results.first?.text ?? "")")
+		XCTAssertEqual(
+			results.first?.text,
+			exampleObjectText,
+			"The retured results should have the string of the searched for object. Instead it has \(results.first?.text ?? "")"
+		)
 
 	}
 
@@ -83,8 +73,16 @@ final class PredicateComposerTests: XCTestCase {
 		// Then
 		XCTAssertEqual( 2, results.count, "There should be exactly two results, \(results.count) found")
 		try XCTSkipIf(results.count != 2)
-		XCTAssertEqual(results[0], exampleObjects.notes[1], "The first result should equal the second object added to the database")
-		XCTAssertEqual(results[1], exampleObjects.notes[2], "The second result should equal the third object added to the database")
+		XCTAssertEqual(
+			results[0],
+			exampleObjects.notes[1],
+			"The first result should equal the second object added to the database"
+		)
+		XCTAssertEqual(
+			results[1],
+			exampleObjects.notes[2],
+			"The second result should equal the third object added to the database"
+		)
 	}
 
 	func test_PredicateComposer_tag1Ortag2_twoResults() throws {
@@ -104,9 +102,21 @@ final class PredicateComposerTests: XCTestCase {
 
 		try XCTSkipIf(results.count != 3)
 
-		XCTAssertEqual(results[0], exampleObjects.notes[0], "The first result should equal the first object added to the database")
-		XCTAssertEqual(results[1], exampleObjects.notes[1], "The second result should equal the second object added to the database")
-		XCTAssertEqual(results[2], exampleObjects.notes[3], "The third result should equal the fourth object added to the database")
+		XCTAssertEqual(
+			results[0],
+			exampleObjects.notes[0],
+			"The first result should equal the first object added to the database"
+		)
+		XCTAssertEqual(
+			results[1],
+			exampleObjects.notes[1],
+			"The second result should equal the second object added to the database"
+		)
+		XCTAssertEqual(
+			results[2],
+			exampleObjects.notes[3],
+			"The third result should equal the fourth object added to the database"
+		)
 	}
 
 	func test_PredicateComposer_noTag_zeroResults() throws {
@@ -124,7 +134,11 @@ final class PredicateComposerTests: XCTestCase {
 		// Then
 		XCTAssertEqual( 1, results.count, "There should be exactly one results, \(results.count) found")
 		try XCTSkipIf(results.count != 1)
-		XCTAssertEqual(results[0], exampleObjects.notes[2], "The first result should equal the third object added to the database")
+		XCTAssertEqual(
+			results[0],
+			exampleObjects.notes[2],
+			"The first result should equal the third object added to the database"
+		)
 	}
 
 	func test_PredicateComposer_lonelyTagOr_zeroResults() throws {
@@ -158,7 +172,11 @@ final class PredicateComposerTests: XCTestCase {
 		// Then
 		XCTAssertEqual(1, results.count, "There should be exactly one result, \(results.count) found")
 		try XCTSkipIf(results.count != 1)
-		XCTAssertEqual(results[0], exampleObjects.notes[0], "The first result should equal the first object added to the database")
+		XCTAssertEqual(
+			results[0],
+			exampleObjects.notes[0],
+			"The first result should equal the first object added to the database"
+		)
 	}
 
 	func test_PredicateComposer_tag1AndTag2OrStringMatch_twoResults() throws {
@@ -179,7 +197,11 @@ final class PredicateComposerTests: XCTestCase {
 		// Then
 		XCTAssertEqual(2, results.count, "There should be exactly two results, \(results.count) found")
 		try XCTSkipIf(results.count != 2)
-		XCTAssertEqual(results[0], exampleObjects.notes[0], "The first result should equal the first object added to the database")
+		XCTAssertEqual(
+			results[0],
+			exampleObjects.notes[0],
+			"The first result should equal the first object added to the database"
+		)
 		let text = try XCTUnwrap(results[1].text)
 		XCTAssert(text.contains("without"), "The second result should equal the third object added to the database: \(text)")
 	}
@@ -198,7 +220,11 @@ final class PredicateComposerTests: XCTestCase {
 		// Then
 		XCTAssertEqual(1, results.count, "There should be exactly one result, \(results.count) found")
 		try XCTSkipIf(results.count != 1)
-		XCTAssertEqual(results[0], exampleObjects.notes[3], "The first result should equal the first object added to the database")
+		XCTAssertEqual(
+			results[0],
+			exampleObjects.notes[3],
+			"The first result should equal the first object added to the database"
+		)
 	}
 
 	func test_PredicateComposer_tag1_twoResult() throws {
@@ -214,8 +240,16 @@ final class PredicateComposerTests: XCTestCase {
 		// Then
 		XCTAssertEqual(2, results.count, "There should be exactly two results, \(results.count) found")
 		try XCTSkipIf(results.count != 2)
-		XCTAssertEqual(results[0], exampleObjects.notes[0], "The first result should equal the first object added to the database")
-		XCTAssertEqual(results[1], exampleObjects.notes[1], "The second result should equal the second object added to the database")
+		XCTAssertEqual(
+			results[0],
+			exampleObjects.notes[0],
+			"The first result should equal the first object added to the database"
+		)
+		XCTAssertEqual(
+			results[1],
+			exampleObjects.notes[1],
+			"The second result should equal the second object added to the database"
+		)
 	}
 
 	func test_PredicateComposer_note1AndNote3_twoResults() throws {
@@ -235,8 +269,16 @@ final class PredicateComposerTests: XCTestCase {
 		// Then
 		XCTAssertEqual(2, results.count, "There should be exactly two results, \(results.count) found")
 		try XCTSkipIf(results.count != 2)
-		XCTAssertEqual(results[0], exampleObjects.notes[0], "The first result should equal the first object added to the database")
-		XCTAssertEqual(results[1], exampleObjects.notes[1], "The second result should equal the second object added to the database")
+		XCTAssertEqual(
+			results[0],
+			exampleObjects.notes[0],
+			"The first result should equal the first object added to the database"
+		)
+		XCTAssertEqual(
+			results[1],
+			exampleObjects.notes[1],
+			"The second result should equal the second object added to the database"
+		)
 	}
 
 	func test_PredicateComposer_emptyPredicate_noCrash() throws {
@@ -251,7 +293,11 @@ final class PredicateComposerTests: XCTestCase {
 		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
 
 		// Then
-		XCTAssertEqual(exampleObjects.notes.count, results.count, "There should be exactly the same number of results as notes, \(results.count) found")
+		XCTAssertEqual(
+			exampleObjects.notes.count,
+			results.count,
+			"There should be exactly the same number of results as notes, \(results.count) found"
+		)
 	}
 
 	func test_PredicateComposer_beginsWith_() throws {
@@ -269,7 +315,11 @@ final class PredicateComposerTests: XCTestCase {
 		// Then
 		XCTAssertEqual(1, results.count, "There should be exactly one note, \(results.count) found")
 		try XCTSkipIf(results.count != 1)
-		XCTAssertEqual(results[0].text, exampleObjects.notes[1].text, "The first result's text should equal the second object added to the database's text ('nothingburger')")
+		XCTAssertEqual(
+			results[0].text,
+			exampleObjects.notes[1].text,
+			"The first result's text should equal the second object added to the database's text ('nothingburger')"
+		)
 	}
 
 	func test_PredicateComposer_isTrue_oneResult() throws {

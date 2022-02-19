@@ -27,9 +27,11 @@ public struct SearchFor {
 		self.predicateType = predicateType
 		self.arguments = arguments
 
-
 	}
 
+	// Swift Lint is disabled because I think that this switch is easier to read than
+	// breaking it up into multiple functions.
+	// swiftlint:disable cyclomatic_complexity
 	internal func constructQuery() -> [(String, Any?)]? {
 		switch self.predicateType {
 		case .isTrue:
@@ -76,6 +78,7 @@ public struct SearchFor {
 			}
 		}
 	}
+	// swiftlint:enable cyclomatic_complexity
 
 	public func predicate() -> NSPredicate {
 		var strings: [String] = []
