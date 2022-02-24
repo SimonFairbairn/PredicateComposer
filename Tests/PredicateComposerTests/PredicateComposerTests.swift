@@ -182,11 +182,12 @@ final class PredicateComposerTests: BaseTestCase {
 	func test_PredicateComposer_tag1AndTag2OrStringMatch_twoResults() throws {
 
 		// Given
-		let search = PredicateComposer(.or([
-			SearchFor(.attribute("tags"), that: .haveAllOf([exampleObjects.tags[0], exampleObjects.tags[1]])),
+		let search = SearchFor(
+			.attribute("tags"), that: .haveAllOf([exampleObjects.tags[0], exampleObjects.tags[1]])
+		).or(
 			SearchFor(.attribute("text"), that: .containsCaseInsensitive("without"))
-		]))
-
+		)
+		
 		let request = Note.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()
@@ -255,10 +256,11 @@ final class PredicateComposerTests: BaseTestCase {
 	func test_PredicateComposer_note1AndNote3_twoResults() throws {
 
 		// Given
-		let search = PredicateComposer(.or([
-			SearchFor(.attribute("text"), that: .containsCaseInsensitive("test")),
-			SearchFor(.attribute("text"), that: .containsCaseInsensitive("nothingburger"))
-		]))
+		let search = SearchFor(.attribute("text"), that: .containsCaseInsensitive("test"))
+			.or(
+				SearchFor(.attribute("text"), that: .containsCaseInsensitive("nothingburger"))
+			)
+
 		let request = Note.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()

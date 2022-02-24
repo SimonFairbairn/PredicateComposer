@@ -22,20 +22,4 @@ class SearchForTests: XCTestCase {
 		super.tearDown()
 	}
 
-	func testThatNewSearchForProducesCorrectString() {
-
-		let composition = PredicateComposer(
-			.and([
-				SearchFor(.attribute("text"), that: .containsCaseInsensitive("nothingburger")),
-				SearchFor(.attribute("isCompleted"), that: .isTrue)
-			], .or([
-				SearchFor(.attribute("text"), that: .containsCaseInsensitive("nothingburger")),
-				SearchFor(.attribute("text"), that: .containsCaseInsensitive("tag"))
-			]))
-		)
-
-		print(composition.string)
-		print(composition.arguments)
-	}
-
 }
