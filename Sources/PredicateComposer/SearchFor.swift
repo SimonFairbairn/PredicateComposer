@@ -65,11 +65,11 @@ public struct SearchFor {
 		case .isFalse:
 			return [("\(isToMany ? "ANY " : "")\(attribute) == false", nil)]
 		case .contains(let argument):
-			return (argument == nil) ? nil : [("\(attribute) CONTAINS %@", argument)]
+			return (argument == nil) ? nil : [("\(isToMany ? "ANY " : "")\(attribute) CONTAINS %@", argument)]
 		case .containsCaseInsensitive(let argument):
-			return (argument == nil) ? nil : [("\(attribute) CONTAINS[c] %@", argument)]
+			return (argument == nil) ? nil : [("\(isToMany ? "ANY " : "")\(attribute) CONTAINS[c] %@", argument)]
 		case .beginsWithCaseInsensitive(let argument):
-			return (argument == nil) ? nil : [("\(attribute) BEGINSWITH[c] %@", argument)]
+			return (argument == nil) ? nil : [("\(isToMany ? "ANY " : "")\(attribute) BEGINSWITH[c] %@", argument)]
 		case .isLessThan(let argument):
 			return [("\(attribute) < %@", argument)]
 		case .isGreaterThan(let argument):
@@ -124,10 +124,10 @@ public struct SearchFor {
 		return NSPredicate(format: strings.joined(separator: " AND "), argumentArray: argsArray.isEmpty ? nil : argsArray)
 	}
 
-	func and( _ search: SearchFor ) -> PredicateComposer {
+	public func and( _ search: SearchFor ) -> PredicateComposer {
 		return PredicateComposer([self, search], combinedWith: .and)
 	}
-	func or( _ search: SearchFor ) -> PredicateComposer {
+	public func or( _ search: SearchFor ) -> PredicateComposer {
 		return PredicateComposer([self, search], combinedWith: .or)
 	}
 }

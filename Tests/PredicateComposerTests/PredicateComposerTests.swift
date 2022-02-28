@@ -361,4 +361,26 @@ final class PredicateComposerTests: BaseTestCase {
 		XCTAssertFalse(results[1].isCompleted)
 		XCTAssertFalse(results[2].isCompleted)
 	}
+
+	func test_PredicateComposer_canHaveAdditionalThingsAdded() throws {
+		// Given
+		var search = PredicateComposer(SearchFor(.entityRelationshipWithAttribute("tags", "isFavourite"), that: .isTrue))
+		search = search.and(SearchFor(.attribute("text"), that: .containsCaseInsensitive("test")))
+			.or(
+//				SearchFor(.attribute("text"), that: .containsCaseInsensitive("Tag 2"))
+				SearchFor(.entityRelationshipWithAttribute("tags", "name"), that: .containsCaseInsensitive(" 2"))
+			)
+
+		let request = Note.fetchRequest()
+		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
+
+		// When
+		request.predicate = search.predicate()
+
+		let results = try PredicateComposerTests.model.persistentContainer.viewContext.fetch(request)
+
+		// Then
+		XCTAssertEqual(2, results.count, "There should be two notes, \(results.count) found")
+
+	}
 }

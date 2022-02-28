@@ -29,22 +29,22 @@ public struct PredicateComposer {
 	var string: String = ""
 	var arguments: [Any] = []
 
-	init() {
+	public init() {
 		self.groups = []
 	}
 
-	init( _ search: SearchFor ) {
+	public init( _ search: SearchFor ) {
 		self.groups = [Group(searches: [search], searchCombiner: .and)]
 	}
 
-	init( _ searches: [SearchFor], combinedWith: SearchCombiner ) {
+	public init( _ searches: [SearchFor], combinedWith: SearchCombiner ) {
 		self.groups = [Group(searches: searches, searchCombiner: combinedWith)]
 	}
 	init( _ groups: [Group] ) {
 		self.groups = groups
 	}
 
-	func predicate() -> NSPredicate? {
+	public func predicate() -> NSPredicate? {
 		if groups.isEmpty { return nil }
 		let predString = self.predicateString()
 		return NSPredicate(format: predString.0, argumentArray: predString.1)
@@ -68,11 +68,14 @@ public struct PredicateComposer {
 					groupStrings.append(stringArray.joined(separator: " AND "))
 				}
 			}
+			if groupStrings.isEmpty {
+				continue
+			}
 
 			if predicateString.isEmpty {
 				predicateString = "(" + groupStrings.joined(separator: group.searchCombiner.description) + ")"
 			} else {
-				predicateString = "(" + groupStrings.joined(separator: group.searchCombiner.description) + predicateString + ")"
+				predicateString = "(" + groupStrings.joined(separator: group.searchCombiner.description) + group.searchCombiner.description + predicateString + ")"
 			}
 		}
 		return (predicateString, args)
@@ -108,11 +111,11 @@ public struct PredicateComposer {
 	}
 
 
-	func and( _ search: SearchFor ) -> PredicateComposer {
+	public func and( _ search: SearchFor ) -> PredicateComposer {
 		addNew(search, with: .and)
 	}
 
-	func or( _ search: SearchFor ) -> PredicateComposer {
+	public func or( _ search: SearchFor ) -> PredicateComposer {
 		addNew(search, with: .or)
 	}
 
