@@ -68,16 +68,19 @@ final class CoreDataContainer {
 	private func addTag( with string: String ) -> Tag {
 		let newExample = Tag(context: self.persistentContainer.viewContext)
 		newExample.name = string
+		if string == "Tag 1" || string == "Tag 2" {
+			newExample.isFavourite = true
+		}
 		self.saveContext()
 		return newExample
 	}
 
 	func addExamples() -> (notes: [Note], tags: [Tag]) {
 		let strings = [
-			"A test string to search on",
-			"nothingburger",
+			"A test string to search on", 	// Tag 1, Tag 2
+			"nothingburger",				// Tag 1
 			"without tags",
-			"Tag 2"
+			"Tag 2"							// Tag 2, Tag 3
 		]
 		let examples = strings.map({ self.addExample(with: $0, isCompleted: $0.contains("test string")) })
 

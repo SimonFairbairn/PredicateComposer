@@ -1,99 +1,134 @@
 import CoreData
 
-public enum PredicateType {
-	case contains(String?)
-	case containsCaseInsensitive(String?)
-	case beginsWithCaseInsensitive(String?)
-	case equals(Any?)
-	case isInArray([Any])
-	case haveAtLeastOneOf( Any)
-	case haveAllOf( Any )
-	case isTrue
-	case isFalse
-}
-
-public enum Match {
-	case entity
-	case attribute(String)
-	case relationshipWithEntityNamed(String)
-	case entityRelationshipWithAttribute(String, String)
-}
-
 public struct PredicateComposer {
 
 	// Disabling Swift Lint as these enum names are namespaced to PredicateComposer and accurately
 	// describe how they combine database searches using commonly understood language. 
 	// swiftlint:disable identifier_name
-	public indirect enum SearchGroupCombiner {
-		case and([SearchFor], SearchGroupCombiner? = nil)
-		case or([SearchFor], SearchGroupCombiner? = nil)
+	public enum SearchCombiner: CustomStringConvertible {
+		case and
+		case or
+
+		public var description: String {
+			switch self {
+			case .and:
+				return " AND "
+			case .or:
+				return " OR "
+			}
+		}
 	}
 	// swiftlint:enable identifier_name
 
+	struct Group {
+		let searches: [SearchFor]
+		let searchCombiner: SearchCombiner
+	}
+	let groups: [Group]
+
 	var string: String = ""
 	var arguments: [Any] = []
-	public init( _ combinations: SearchGroupCombiner...) {
-		for combo in combinations {
-			self.parse(combo)
-		}
+
+	public init() {
+		self.groups = []
 	}
 
 	public init( _ search: SearchFor ) {
-		if let queries = search.constructQuery() {
-			for query in queries {
-				self.string = query.0
-				if let args = query.1 {
-					self.arguments.append(args)
-				}
-			}
-		}
+		self.groups = [Group(searches: [search], searchCombiner: .and)]
 	}
 
-	mutating func parseSearches( _ searches: [SearchFor] ) -> [String] {
-		var strings: [String] = []
-		for search in searches {
-			var innerStrings: [String] = []
-			if let queries = search.constructQuery() {
-				for query in queries {
-					innerStrings.append(query.0)
-					if let args = query.1 {
-						self.arguments.append(args)
+	public init( _ searches: [SearchFor], combinedWith: SearchCombiner ) {
+		self.groups = [Group(searches: searches, searchCombiner: combinedWith)]
+	}
+	init( _ groups: [Group] ) {
+		self.groups = groups
+	}
+
+	public func predicate() -> NSPredicate? {
+		if groups.isEmpty { return nil }
+		let predString = self.predicateString()
+		return NSPredicate(format: predString.0, argumentArray: predString.1)
+	}
+
+	func predicateString() -> (String, [Any]) {
+		var predicateString = ""
+		var args: [Any] = []
+
+		for group in groups.reversed() {
+			var groupStrings: [String] = []
+			for search in group.searches {
+				if let searchStrings = search.constructQuery() {
+					var stringArray: [String] = []
+					for searchString in searchStrings {
+						stringArray.append(searchString.0)
+						if let searchArgs = searchString.1 {
+							args.append(searchArgs)
+						}
 					}
+					groupStrings.append(stringArray.joined(separator: " AND "))
 				}
 			}
-			strings.append(innerStrings.joined(separator: " AND "))
-		}
-		return strings
-	}
-
-	mutating func parse( _ combo: SearchGroupCombiner ) {
-		switch combo {
-		case .and(let searches, let children):
-			self.string += "("
-			let strings = self.parseSearches(searches)
-			self.string += strings.joined(separator: " AND ")
-			if let child = children {
-				self.string += " AND "
-				self.parse(child)
+			if groupStrings.isEmpty {
+				continue
 			}
 
-			self.string += ")"
-		case .or(let searches, let children):
-			self.string += "("
-			let strings = self.parseSearches(searches)
-			self.string += strings.joined(separator: " OR ")
-			if let child = children {
-				self.string += " OR "
-				self.parse(child)
+			if predicateString.isEmpty {
+				predicateString = "(" + groupStrings.joined(separator: group.searchCombiner.description) + ")"
+			} else {
+				predicateString = "(" + groupStrings.joined(separator: group.searchCombiner.description) + group.searchCombiner.description + predicateString + ")"
 			}
+		}
+		return (predicateString, args)
+	}
 
-			self.string += ")"
+	func addNew( _ search: SearchFor, with combiner: SearchCombiner ) -> PredicateComposer {
+		if let group = self.groups.last {
+			var newGroups = Array(groups.dropLast())
+			var searches = group.searches
+
+			if group.searchCombiner == combiner {
+				searches.append(search)
+				let group = Group(searches: searches, searchCombiner: combiner)
+				newGroups.append(group)
+				return PredicateComposer(Array(newGroups))
+			} else {
+				var newSearches: [SearchFor] = []
+				if let newSearch = searches.last {
+					newSearches = [newSearch, search]
+				} else {
+					newSearches = [search]
+				}
+				let previousSearches = searches.dropLast()
+				let previousGroup = Group(searches: Array(previousSearches), searchCombiner: group.searchCombiner)
+				let group = Group(searches: newSearches, searchCombiner: combiner)
+				newGroups.append(previousGroup)
+				newGroups.append(group)
+				return PredicateComposer(newGroups)
+			}
+		} else {
+			return PredicateComposer([search], combinedWith: .and)
 		}
 	}
 
-	func predicate() -> NSPredicate? {
-		guard !self.string.isEmpty else { return nil }
-		return NSPredicate(format: self.string, argumentArray: self.arguments)
+
+	public func and( _ search: SearchFor ) -> PredicateComposer {
+		addNew(search, with: .and)
+	}
+
+	public func or( _ search: SearchFor ) -> PredicateComposer {
+		addNew(search, with: .or)
 	}
 
 }
+// PredicateComposer(SearchFor(X)).and(SearchFor(Y))
+// X AND Y
+
+// PredicateComposer(SearchFor(X)).and(.or([SearchFor(A), SearchFor(B)])
+// X AND (A or B)
+
+// PredicateComposer(.and([SearchFor(X), SearchFor(Y)])).or(.and([SearchFor(A), SearchFor(B)])
+// (X AND Y) OR (A AND B)
+
+// PredicateComposer( SearchFor(X) ).and( SearchFor(A).or(SearchFor(B).and(.and(SearchFor(F).or(SearchFor(G)))
+
+

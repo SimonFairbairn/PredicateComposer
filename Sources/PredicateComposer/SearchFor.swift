@@ -7,22 +7,48 @@
 
 import CoreData
 
+public enum PredicateType {
+	case contains(String?)
+	case containsCaseInsensitive(String?)
+	case beginsWithCaseInsensitive(String?)
+	case isGreaterThan(Any)
+	case isLessThan(Any)
+	case equals(Any?)
+	case isInArray([Any])
+	case haveAtLeastOneOf( Any)
+	case haveAllOf( Any )
+	case isTrue
+	case isFalse
+}
+
+public enum Match {
+	case entity
+	case attribute(String)
+	case relationshipWithEntityNamed(String)
+	case entityRelationshipWithAttribute(String, String)
+}
+
 public struct SearchFor {
 
 	let attribute: String
 	let predicateType: PredicateType
 	let arguments: Any?
+	let isToMany: Bool
 
 	public init( _ attribute: Match, that predicateType: PredicateType, arguments: Any? = nil) {
 		switch attribute {
 		case .entity:
 			self.attribute = "self"
+			self.isToMany = false
 		case .attribute(let attribute):
 			self.attribute = attribute
+			self.isToMany = false
 		case .relationshipWithEntityNamed(let entity):
 			self.attribute = entity
+			self.isToMany = false
 		case .entityRelationshipWithAttribute(let obj, let attribute):
 			self.attribute = "\(obj).\(attribute)"
+			self.isToMany = true
 		}
 		self.predicateType = predicateType
 		self.arguments = arguments
@@ -35,15 +61,19 @@ public struct SearchFor {
 	internal func constructQuery() -> [(String, Any?)]? {
 		switch self.predicateType {
 		case .isTrue:
-			return [("\(attribute) == true", nil)]
+			return [("\(isToMany ? "ANY " : "")\(attribute) == true", nil)]
 		case .isFalse:
-			return [("\(attribute) == false", nil)]
+			return [("\(isToMany ? "ANY " : "")\(attribute) == false", nil)]
 		case .contains(let argument):
-			return (argument == nil) ? nil : [("\(attribute) CONTAINS %@", argument)]
+			return (argument == nil) ? nil : [("\(isToMany ? "ANY " : "")\(attribute) CONTAINS %@", argument)]
 		case .containsCaseInsensitive(let argument):
-			return (argument == nil) ? nil : [("\(attribute) CONTAINS[c] %@", argument)]
+			return (argument == nil) ? nil : [("\(isToMany ? "ANY " : "")\(attribute) CONTAINS[c] %@", argument)]
 		case .beginsWithCaseInsensitive(let argument):
-			return (argument == nil) ? nil : [("\(attribute) BEGINSWITH[c] %@", argument)]
+			return (argument == nil) ? nil : [("\(isToMany ? "ANY " : "")\(attribute) BEGINSWITH[c] %@", argument)]
+		case .isLessThan(let argument):
+			return [("\(attribute) < %@", argument)]
+		case .isGreaterThan(let argument):
+			return [("\(attribute) > %@", argument)]
 		case .equals(let argument):
 			return [("\(attribute) == %@", argument)]
 		case .isInArray(let array):
@@ -92,5 +122,12 @@ public struct SearchFor {
 			}
 		}
 		return NSPredicate(format: strings.joined(separator: " AND "), argumentArray: argsArray.isEmpty ? nil : argsArray)
+	}
+
+	public func and( _ search: SearchFor ) -> PredicateComposer {
+		return PredicateComposer([self, search], combinedWith: .and)
+	}
+	public func or( _ search: SearchFor ) -> PredicateComposer {
+		return PredicateComposer([self, search], combinedWith: .or)
 	}
 }
