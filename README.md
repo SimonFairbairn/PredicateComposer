@@ -1,10 +1,14 @@
 # PredicateComposer
 
-Compose and reuse predicates and fetch requests in a convenient and type-safe way. No more will you have to look up those predicate patterns!
+Compose and reuse predicates for Core Data fetch requests in a convenient and type-safe way. 
+
+No more looking up complex predicate patterns!
 
 ## Usage
 
 For searching on a single attribute.
+
+	import PredicateComposer
 
 	let search = SearchFor(.attribute("text"), that: .containsCaseInsensitive("test"))
 	
@@ -13,13 +17,18 @@ For searching on a single attribute.
 
 For more complex searches:
 
+	import PredicateComposer
+
 	let search = SearchFor(.attribute("text"), that: .containsCaseInsensitive("test"))
-		.and(SearchFor(.attribute("tags"), that: .haveAllOf( tag1, tag2 ) ) ))
+		.or(SearchFor(.attribute("tags"), that: .haveAllOf( tag1, tag2 ) ) )).and(SearchFor(.entityRelationshipWithAttribute("revision", "date"), that: .isLessThan(Date())))
 	
 	let fetchRequest = Note.fetchRequest()
 	fetchRequest.predicate = search.predicate()
 
+
 Searches can be composed as needed:
+
+	import PredicateComposer
 
 	var search = SearchFor(.attribute("text"), that: .containsCaseInsensitive("test"))
 	
@@ -29,4 +38,5 @@ Searches can be composed as needed:
 	
 	let fetchRequest = Note.fetchRequest()
 	fetchRequest.predicate = search.predicate()
+
 
