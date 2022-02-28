@@ -38,5 +38,3 @@ Searches can be composed as needed:
 	
 	let fetchRequest = Note.fetchRequest()
 	fetchRequest.predicate = search.predicate()
-
-
