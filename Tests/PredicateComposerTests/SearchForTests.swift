@@ -10,7 +10,7 @@ import XCTest
 
 class SearchForTests: XCTestCase {
 
-	var exampleObjects: ( notes: [Note], tags: [Tag] )!
+	var exampleObjects: ( notes: [PCNote], tags: [PCTag] )!
 
 	override func setUp() {
 		self.exampleObjects = PredicateComposerTests.model.addExamples()

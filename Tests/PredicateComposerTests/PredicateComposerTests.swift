@@ -7,7 +7,7 @@ final class PredicateComposerTests: BaseTestCase {
     func test_PredicateComposer_stringSearchForTest_oneResult() throws {
 
 		// Given
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		let search = SearchFor(.attribute("text"), that: .containsCaseInsensitive("test"))
 		request.predicate = search.predicate()
 
@@ -23,7 +23,7 @@ final class PredicateComposerTests: BaseTestCase {
 		// Given
 		let search = SearchFor(.attribute("text"), that: .containsCaseInsensitive("a missing string"))
 
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()
 
@@ -41,7 +41,7 @@ final class PredicateComposerTests: BaseTestCase {
 
 		let search = SearchFor(.entity, that: .equals(exampleObjects.notes[1]))
 
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: false)]
 		request.predicate = search.predicate()
 
@@ -63,7 +63,7 @@ final class PredicateComposerTests: BaseTestCase {
 		// Given
 		let search1 = SearchFor(.entity, that: .isInArray(Array(exampleObjects.notes[1...2])))
 
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search1.predicate()
 
@@ -90,7 +90,7 @@ final class PredicateComposerTests: BaseTestCase {
 		// Given
 		let search = SearchFor(.attribute("tags"), that: .haveAtLeastOneOf(exampleObjects.tags))
 
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()
 
@@ -124,7 +124,7 @@ final class PredicateComposerTests: BaseTestCase {
 		// Given
 		let search = SearchFor(.attribute("tags"), that: .haveAtLeastOneOf([]))
 
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()
 
@@ -146,7 +146,7 @@ final class PredicateComposerTests: BaseTestCase {
 		// Given
 		let search = SearchFor(.attribute("tags"), that: .haveAtLeastOneOf([exampleObjects.tags[2]]))
 
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()
 
@@ -162,7 +162,7 @@ final class PredicateComposerTests: BaseTestCase {
 		// Given
 		let search = SearchFor(.attribute("tags"), that: .haveAllOf([exampleObjects.tags[0], exampleObjects.tags[1]]))
 
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()
 
@@ -188,7 +188,7 @@ final class PredicateComposerTests: BaseTestCase {
 			SearchFor(.attribute("text"), that: .containsCaseInsensitive("without"))
 		)
 		
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()
 
@@ -211,7 +211,7 @@ final class PredicateComposerTests: BaseTestCase {
 
 		// Given
 		let search = SearchFor(.attribute("tags"), that: .haveAllOf([exampleObjects.tags[3]]))
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()
 
@@ -231,7 +231,7 @@ final class PredicateComposerTests: BaseTestCase {
 	func test_PredicateComposer_tag1_twoResult() throws {
 		// Given
 		let search = SearchFor(.attribute("tags"), that: .haveAllOf([exampleObjects.tags[0]]))
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()
 
@@ -261,7 +261,7 @@ final class PredicateComposerTests: BaseTestCase {
 				SearchFor(.attribute("text"), that: .containsCaseInsensitive("nothingburger"))
 			)
 
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()
 
@@ -287,7 +287,7 @@ final class PredicateComposerTests: BaseTestCase {
 		// Given
 		let search = PredicateComposer()
 
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()
 
@@ -307,7 +307,7 @@ final class PredicateComposerTests: BaseTestCase {
 		// Given
 		let search = SearchFor(.attribute("text"), that: .beginsWithCaseInsensitive("NOTHING"))
 
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()
 
@@ -329,7 +329,7 @@ final class PredicateComposerTests: BaseTestCase {
 		// Given
 		let search = SearchFor(.attribute("isCompleted"), that: .isTrue)
 
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()
 
@@ -347,7 +347,7 @@ final class PredicateComposerTests: BaseTestCase {
 		// Given
 		let search = SearchFor(.attribute("isCompleted"), that: .isFalse)
 
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 		request.predicate = search.predicate()
 
@@ -371,7 +371,7 @@ final class PredicateComposerTests: BaseTestCase {
 				SearchFor(.entityRelationshipWithAttribute("tags", "name"), that: .containsCaseInsensitive(" 2"))
 			)
 
-		let request = Note.fetchRequest()
+		let request = PCNote.fetchRequest()
 		request.sortDescriptors = [NSSortDescriptor(key: "added", ascending: true)]
 
 		// When
