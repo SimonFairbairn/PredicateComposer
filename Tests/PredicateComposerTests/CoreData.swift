@@ -45,7 +45,7 @@ final class CoreDataContainer {
 		}
 	}
 
-	func remove( _ objects: (notes: [Note], tags: [Tag]) ) {
+	func remove( _ objects: (notes: [PCNote], tags: [PCTag]) ) {
 		for obj in objects.notes {
 			self.persistentContainer.viewContext.delete(obj)
 		}
@@ -56,8 +56,8 @@ final class CoreDataContainer {
 		self.saveContext()
 	}
 
-	private func addExample( with string: String, isCompleted: Bool = false ) -> Note {
-		let newExample = Note(context: self.persistentContainer.viewContext)
+	private func addExample( with string: String, isCompleted: Bool = false ) -> PCNote {
+		let newExample = PCNote(context: self.persistentContainer.viewContext)
 		newExample.text = string
 		newExample.isCompleted = isCompleted
 		newExample.added = Date()
@@ -65,8 +65,8 @@ final class CoreDataContainer {
 		return newExample
 	}
 
-	private func addTag( with string: String ) -> Tag {
-		let newExample = Tag(context: self.persistentContainer.viewContext)
+	private func addTag( with string: String ) -> PCTag {
+		let newExample = PCTag(context: self.persistentContainer.viewContext)
 		newExample.name = string
 		if string == "Tag 1" || string == "Tag 2" {
 			newExample.isFavourite = true
@@ -75,7 +75,7 @@ final class CoreDataContainer {
 		return newExample
 	}
 
-	func addExamples() -> (notes: [Note], tags: [Tag]) {
+	func addExamples() -> (notes: [PCNote], tags: [PCTag]) {
 		let strings = [
 			"A test string to search on", 	// Tag 1, Tag 2
 			"nothingburger",				// Tag 1
